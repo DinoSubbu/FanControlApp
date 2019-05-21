@@ -213,7 +213,7 @@ public class ConnectActivity extends AppCompatActivity {
                 Log.i("Nullllll", "Nullllllllll");
             }
             Log.i("Inside characteri","Inside characteristic write");
-            int Fanspeed = ((FanSpeed / 65535) * 100);
+            float Fanspeed = ( ((float)FanSpeed / 65535) * 100);
             InfoTextView.setText("Fan is Running at " + Fanspeed + " % speed !!");
             //characteristic.setValue(FanSpeed, BluetoothGattCharacteristic.FORMAT_UINT16, 0);
 

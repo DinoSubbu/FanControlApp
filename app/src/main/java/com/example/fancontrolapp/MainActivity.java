@@ -94,11 +94,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //case R.id.startScan:
             case R.id.fancontrol:
                 String input= editText.getText().toString();
-                intensity_value=Integer.parseInt(input);
-                // showInputDialog();
-                Intent scanIntent = new Intent(MainActivity.this, ConnectActivity.class);
-                scanIntent.putExtra("Intensity value",intensity_value);
-                MainActivity.this.startActivity(scanIntent);
+                try {
+                    intensity_value = Integer.parseInt(input);
+                }
+                catch (Exception e){
+                    Toast.makeText(MainActivity.this, "Enter a Valid Value",
+                            Toast.LENGTH_LONG).show();
+                    break;
+                }
+                if (intensity_value >=0 && intensity_value <=65535){
+                    // showInputDialog();
+                    Intent scanIntent = new Intent(MainActivity.this, ConnectActivity.class);
+                    scanIntent.putExtra("Intensity value",intensity_value);
+                    MainActivity.this.startActivity(scanIntent);
+                }
+                else{
+                    Toast.makeText(MainActivity.this, "Enter a Valid Value",
+                            Toast.LENGTH_LONG).show();
+                }
+
                 break;
 
             case R.id.BtnBluetoothON:
