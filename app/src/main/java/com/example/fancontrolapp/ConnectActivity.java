@@ -38,20 +38,15 @@ import static com.example.fancontrolapp.MainActivity.bluetoothAdapter;
 public class ConnectActivity extends AppCompatActivity {
 
     public TextView InfoTextView;
-    public Button HumidityValue;
-    public Button TemperatureValue;
     private boolean mScanning;
+    private static int FanSpeed;
     private Handler handler = new Handler();
-    /*public UUID[] uuidss = new UUID()
-    uuidss[0] =*/
-    String[] FanUUID = {"00000002-0000-0000-FDFD-FDFDFDFDFDFD"};
-    private static final UUID WeatherServiceUUID = UUID.fromString("00000002-0000-0000-FDFD-FDFDFDFDFDFD");
-    private static final UUID TemperatureCharacteristicUUID = UUID.fromString("00002a1c-0000-1000-8000-00805f9b34fb");
-    private static final UUID HumidityCharacteristicUUID = UUID.fromString("00002a6f-0000-1000-8000-00805f9b34fb");
-    private static final UUID CLIENT_CHARACTERISTIC_CONFIG = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
-    String[] FanName = {"F6:B6:2A:79:7B:5D"};
-    //public UUID FanServiceUUID = UUID.fromString("00000001-0000-0000-FDFD-FDFDFDFDFDFD");
+    private static final UUID FanServiceUUID = UUID.fromString("00000001-0000-0000-FDFD-FDFDFDFDFDFD");
+    private static final UUID FanCharacteristicUUID = UUID.fromString("10000001-0000-0000-FDFD-FDFDFDFDFDFD");
+    private static final UUID CLIENT_CHARACTERISTIC_CONFIG = UUID.fromString("00002904-0000-1000-8000-00805f9b34fb");
+
+    String[] FanName = {"F8:20:74:F7:2B:82"};
     public BluetoothLeScanner bluetoothLeScanner;
 
     public ArrayList<BluetoothDevice> mBluetoothDeviceList = new ArrayList();
@@ -60,17 +55,14 @@ public class ConnectActivity extends AppCompatActivity {
     public String BTDeviceAddress;
     public BluetoothGatt mGatt;
     // Stops scanning after 10 seconds.
-    private static final long SCAN_PERIOD = 10000;
+    private static final long SCAN_PERIOD = 1000000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_connect);
+        FanSpeed = MainActivity.intensity_value;
         InfoTextView = findViewById(R.id.InfoText);
-        //HumidityValue = findViewById(R.id.Hum);
-        //TemperatureValue = findViewById(R.id.Temp);
-        //startScanning();
-        //startScanning();
         bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
 
         Log.i("Entered 2nd Activity", "ENtered 2nd Activity");
@@ -87,8 +79,6 @@ public class ConnectActivity extends AppCompatActivity {
                 return;
             }
             BTDeviceAddress = result.getDevice().getAddress();
-            //InfoTextView.setText("Device Address" + BTDeviceAddress);
-            //SystemClock.sleep(7000);
             BTdevice = result.getDevice();
             Log.i("BTDEvice",BTdevice.toString());
             Log.i("BTDEviceAddress",BTDeviceAddress.toString());
@@ -136,18 +126,15 @@ public class ConnectActivity extends AppCompatActivity {
         Log.i("Entered ScanLEDeive","Entered ScanLEDeive");
         if (enable) {
             InfoTextView.setText("Scanning");
-            //SystemClock.sleep(7000);
             // Stops scanning after a pre-defined scan period.
             handler.postDelayed(new Runnable() {
                 public void run() {
                     mScanning = false;
-                    //startScanning(FanUUID);
                     bluetoothLeScanner.stopScan(scanCallback);
                 }
             }, SCAN_PERIOD);
 
             mScanning = true;
-            //startScanning(FanUUID);
 
             if (bluetoothLeScanner == null){
                 Log.i("Scan","NULL");
@@ -159,49 +146,6 @@ public class ConnectActivity extends AppCompatActivity {
             bluetoothLeScanner.stopScan(scanCallback);
         }
     }
-
-
-    public void startScanning(String[] uuids) {
-        Log.i("Entered Start Scanning","Entered Start Scanning");
-        if (uuids == null || uuids.length == 0) {
-            InfoTextView.setText("NO Device Found");
-            return;
-        }
-        InfoTextView.setText("UUID "+ uuids);
-        List<ScanFilter> filterList = createScanFilterList(uuids);
-        ScanSettings scanSettings = createScanSettings();
-        bluetoothLeScanner.startScan(filterList, scanSettings, scanCallback);
-    }
-
-    private List<ScanFilter> createScanFilterList(String[] uuids) {
-        List<ScanFilter> filterList = new ArrayList<>();
-        for (String uuid : uuids) {
-            ScanFilter filter = new ScanFilter.Builder()
-                    .setServiceUuid(ParcelUuid.fromString(uuid))
-                    .build();
-            filterList.add(filter);
-        };
-        return filterList;
-    }
-
-    // Perform scan in Balanced Power Mode
-    private ScanSettings createScanSettings() {
-        ScanSettings settingsscan = new ScanSettings.Builder()
-                .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
-                .build();
-        return settingsscan;
-    }
-
-
-    public void stopScanning() {
-        bluetoothLeScanner.stopScan(scanCallback);
-    }
-
-/*
-    public List<BluetoothDevice> getFoundDeviceList() {
-        return mBluetoothDeviceList;
-    }
-*/
 
     private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
         @Override
@@ -228,13 +172,14 @@ public class ConnectActivity extends AppCompatActivity {
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
 
-            BluetoothGattCharacteristic Intensitycharacteristic =
+            BluetoothGattCharacteristic FanCharacteristic =
                     gatt.getService(FanServiceUUID)
-                            .getCharacteristic(IntensityCharacteristicUUID);
+                            .getCharacteristic(FanCharacteristicUUID);
 
+            Log.i("Intensity: ", Integer.toString(FanSpeed));
             // Offset value has to be found and Format has to be decided
-            Intensitycharacteristic.setValue(10000, BluetoothGattCharacteristic.FORMAT_SINT16, 1);
-            gatt.writeCharacteristic(Intensitycharacteristic);
+            FanCharacteristic.setValue(FanSpeed, BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+            gatt.writeCharacteristic(FanCharacteristic);
 
 
            /* BluetoothGattDescriptor descriptor =
@@ -247,7 +192,7 @@ public class ConnectActivity extends AppCompatActivity {
 
         }
 
-        @Override
+       /* @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
 
             Log.i("updatecalled","called");
@@ -255,43 +200,33 @@ public class ConnectActivity extends AppCompatActivity {
             if(characteristic == null){
                 Log.i("Nullllll", "Nullllllllll");
             }
-            //int temperature = characteristic.FORMAT_UINT32;
-            int temperature = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16 ,1);
-            //int temperature = Tempcharacteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16 ,1);
 
-            float ftemperature = temperature/(float)100.00;
-            Log.i("Temperature: " , Integer.toString(temperature));
-
-            InfoTextView.setText("Temperature: " + ftemperature+ "deg Cel");
-
-            Log.i("onCharacteristicRead", characteristic.toString());
-            //gatt.disconnect();
-            //processData(characteristic.getValue());
-        }
+        }*/
 
 
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt,
-                                         BluetoothGattCharacteristic
-                                                 characteristic, int status) {
+                                          BluetoothGattCharacteristic
+                                                  characteristic, int status) {
 
             if(characteristic == null){
                 Log.i("Nullllll", "Nullllllllll");
             }
-            //int temperature = characteristic.FORMAT_UINT32;
-            int temperature = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16 ,1);
-            //int temperature = Tempcharacteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16 ,1);
+            Log.i("Inside characteri","Inside characteristic write");
+            int Fanspeed = ((FanSpeed / 65535) * 100);
+            InfoTextView.setText("Fan is Running at " + Fanspeed + " % speed !!");
+            //characteristic.setValue(FanSpeed, BluetoothGattCharacteristic.FORMAT_UINT16, 0);
 
-            float ftemperature = temperature/(float)100.00;
-            Log.i("Temperature: " , Integer.toString(temperature));
-
-            InfoTextView.setText("Temperature: " + ftemperature+ "deg Cel");
-
-            Log.i("onCharacteristicRead", characteristic.toString());
-            //gatt.disconnect();
         }
 
-
+      /*  @Override
+        public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status){
+            BluetoothGattCharacteristic FanCharacteristic =
+                    gatt.getService(FanServiceUUID)
+                            .getCharacteristic(FanCharacteristicUUID);
+           // FanCharacteristic.setValue(new byte[]{1, 1});
+           // gatt.writeCharacteristic(FanCharacteristic);
+        }*/
     };
 
 
@@ -307,38 +242,9 @@ public class ConnectActivity extends AppCompatActivity {
         catch (Exception e){
             Log.i("mGatt","mGatt disconnect check");
         }
-        //Intent goToMainActivity = new Intent(ConnectionActivity.this, MainActivity.class);
-        //HUMIDITY_BTN_PRESSED = 0;
-        //TEMPERATURE_BTN_PRESSED = 0;
         ConnectActivity.this.finish();
         //ConnectionActivity.this.startActivity(goToMainActivity);
 
     }
 
-    /*
-    private LeDeviceListAdapter leDeviceListAdapter;
-    // Device scan callback.
-    private BluetoothAdapter.LeScanCallback leScanCallback =
-            new BluetoothAdapter.LeScanCallback() {
-                @Override
-                public void onLeScan(final BluetoothDevice device, int rssi,
-                                     byte[] scanRecord) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            leDeviceListAdapter.addDevice(device);
-                            leDeviceListAdapter.notifyDataSetChanged();
-                        }
-                    });
-                }
-            };
-
-    val leDeviceListAdapter: LeDeviceListAdapter = ...
-
-    private val leScanCallback = BluetoothAdapter.LeScanCallback { device, rssi, scanRecord ->
-            runOnUiThread {
-        leDeviceListAdapter.addDevice(device)
-        leDeviceListAdapter.notifyDataSetChanged()
-    }
-    } */
 }
